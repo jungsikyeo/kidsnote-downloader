@@ -2,3 +2,4 @@ node_modules
 download
 build
 __pycache__
+.env
