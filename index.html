@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Kidsnote Downloader</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+</head>
+<body>
+<div class="container">
+    <div class="form-container">
+        <h1>Kidsnote Downloader</h1>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" value="ssamzhang">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" value="y20431!@#">
+        <label for="downloadFolder">Download Folder:</label>
+        <div class="folder-wrapper">
+            <input type="text" id="downloadFolder" name="downloadFolder" class="ml5" readonly />
+            <button id="browse_folder">Browse</button>
+        </div>
+        <label for="dateRange">Download Period:</label>
+        <div class="radio-wrapper">
+            <div class="radio-option">
+                <input type="radio" id="last7Days" name="dateRange" value="last7Days" checked>
+                <label for="last7Days">Last 7 days</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="customDate" name="dateRange" value="customDate">
+                <label for="customDate">Custom date range</label>
+            </div>
+        </div>
+        <div id="customDateRange" class="customDateRange" style="display:none;">
+            <label for="startDate">Search Start Date:</label>
+            <input type="date" id="startDate" name="startDate">
+            <label for="endDate">Search End Date:</label>
+            <input type="date" id="endDate" name="endDate">
+        </div>
+        <div class="submit-wrapper">
+            <button onclick="submitFolder()">Submit</button>
+        </div>
+    </div>
+    <div class="log-container">
+        <h1>Download Log</h1>
+        <div id="log-messages" class="log-messages"></div>
+    </div>
+</div>
+
+<div id="overlay" class="overlay">
+    <div id="spinner" class="spinner"></div>
+</div>
+<script>
+    const browseFolderButton = document.getElementById('browse_folder');
+    browseFolderButton.addEventListener('click', async () => {
+        const folderPath = await window.electron.ipcRenderer.invoke('select-download-folder');
+        if (folderPath) {
+            document.getElementById('downloadFolder').value = folderPath;
+        }
+    });
+
+    document.getElementById('customDate').addEventListener('change', function() {
+        document.getElementById('customDateRange').style.display = this.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('last7Days').addEventListener('change', function() {
+        document.getElementById('customDateRange').style.display = !this.checked ? 'block' : 'none';
+    });
+
+    function getLast7Days() {
+        const date = new Date();
+        date.setDate(date.getDate() - 7);
+        return date.toISOString().split('T')[0];
+    }
+
+    function hideSpinner() {
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = 'none';
+    }
+
+    function scrollToBottom() {
+        const logMessages = document.getElementById('log-messages');
+        logMessages.scrollTop = logMessages.scrollHeight;
+    }
+
+    window.electron.ipcRenderer.on('download-complete', (event, success) => {
+        hideSpinner();
+        if (success) {
+            alert('Download completed successfully!');
+        } else {
+            alert('An error occurred during the download process. Please try again.');
+        }
+    });
+
+    window.electron.ipcRenderer.on('log-message', (event, message) => {
+        const logMessages = document.getElementById('log-messages'); // 'log-messages'로 수정
+        const logMessage = document.createElement('div');
+        logMessage.classList.add('log-message');
+        logMessage.textContent = message;
+        logMessages.appendChild(logMessage); // logMessages로 수정
+        scrollToBottom();
+    });
+
+    function submitFolder() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const customDate = document.getElementById('customDate');
+        const downloadFolder = document.getElementById('downloadFolder').value;
+        const last7Days = document.getElementById('last7Days').checked;
+        const startDate = last7Days ? getLast7Days() : document.getElementById('startDate').value;
+        const endDate = last7Days ? (new Date()).toISOString().split('T')[0] : document.getElementById('endDate').value;
+        const overlay = document.getElementById('overlay');
+
+        if (!username || !password || !downloadFolder) {
+            alert('Please fill in all required fields (username, password, downloadFolder).');
+            return;
+        }
+
+        if (customDate.checked && (!startDate || !endDate)) {
+            alert('Please select a start and end date for the custom date range option.');
+            return;
+        }
+
+        overlay.style.display = 'flex';
+
+        const pythonScriptPath = './dist/main';
+        const command = `${pythonScriptPath} ${username} ${password} ${startDate} ${endDate} \"${downloadFolder}\"`;
+
+        window.electron.ipcRenderer.send('run-python-script', command);
+    }
+
+</script>
+
+</body>
+</html>
