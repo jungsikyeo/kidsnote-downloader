@@ -1,12 +1,18 @@
 import requests
 import json
 import os
+import re
 from datetime import datetime, timedelta
 from urllib.request import urlretrieve
 from dotenv import load_dotenv
 
 load_dotenv()
 recent_day = 7
+
+def sanitize_filename(filename):
+    invalid_chars = r'[<>:"/\\|?*]'
+    sanitized_filename = re.sub(invalid_chars, '_', filename)
+    return sanitized_filename
 
 def login_kidsnote(username, password):
     login_url = 'https://www.kidsnote.com/api/web/login/'
@@ -89,7 +95,8 @@ def download_album_images(albums_info, child_name, note_type):
             print(date, title)
 
             folder_name = f"[{date}]{title}"
-            download_dir = os.path.join('download', child_name, folder_name)
+            sanitized_folder_name = sanitize_filename(folder_name)
+            download_dir = os.path.join('download', child_name, sanitized_folder_name)
 
             os.makedirs(f"{download_dir}", exist_ok=True)
 
