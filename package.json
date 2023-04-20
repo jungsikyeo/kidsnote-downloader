@@ -1,0 +1,38 @@
+{
+  "name": "kidsnote-downloader",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^24.1.2",
+    "electron-builder": "^22.0.0"
+  },
+  "build": {
+    "appId": "com.yjs.kidsnote.downloader",
+    "productName": "Kidsnote Downloader",
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}
