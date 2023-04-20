@@ -1,0 +1,41 @@
+{
+  "name": "kidsnote-downloader",
+  "description": "electron + python + flask",
+  "version": "1.0.0",
+  "main": "main.js",
+  "devDependencies": {
+    "electron-builder": "^22.0.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.yjs.kidsnote.downloader",
+    "productName": "Kidsnote Downloader",
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
+  "author": "",
+  "license": "ISC"
+}
