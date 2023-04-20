@@ -1,5 +1,5 @@
 import time
-
+import re
 import requests
 import json
 import os
@@ -20,6 +20,12 @@ def download_complete(message):
     if message:
         sys.stdout.write(json.dumps({'type': 'download-complete', 'message': message}, ensure_ascii=False) + '\n')
         sys.stdout.flush()
+
+def sanitize_filename(filename):
+    invalid_chars = r'[<>:"/\\|?*]'
+    sanitized_filename = re.sub(invalid_chars, '_', filename)
+    return sanitized_filename
+
 def login_kidsnote(session, username, password):
     login_url = 'https://www.kidsnote.com/api/web/login/'
 
@@ -62,7 +68,7 @@ def get_album_list(session, childrens, start_date=None, end_date=None, download_
             for i in range(delta):
                 target_date = search_start_date + timedelta(days=i)
                 formatted_date = target_date.strftime('%Y-%m-%d')
-                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/albums/?page_size=100&tz=Asia%2FSeoul&child={child}&date={formatted_date}')
+                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/albums/?page_size=1500&tz=Asia%2FSeoul&child={child}&date={formatted_date}')
                 if response.status_code == 200:
                     albums_info = json.loads(response.text)
                     download_album_images(albums_info, child_name, '앨범', download_folder)
@@ -70,7 +76,7 @@ def get_album_list(session, childrens, start_date=None, end_date=None, download_
             for i in range(delta):
                 target_date = search_start_date + timedelta(days=i)
                 formatted_date = target_date.strftime('%Y-%m-%d')
-                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/reports/?page_size=100&tz=Asia%2FSeoul&child={child}&date_start={formatted_date}&date_end={formatted_date}')
+                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/reports/?page_size=1500&tz=Asia%2FSeoul&child={child}&date_start={formatted_date}&date_end={formatted_date}')
                 if response.status_code == 200:
                     albums_info = json.loads(response.text)
                     download_album_images(albums_info, child_name, '알림장', download_folder)
@@ -80,7 +86,7 @@ def get_album_list(session, childrens, start_date=None, end_date=None, download_
             for i in range(int(recent_day)):
                 target_date = today - timedelta(days=i)
                 formatted_date = target_date.strftime('%Y-%m-%d')
-                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/albums/?page_size=100&tz=Asia%2FSeoul&child={child}&date={formatted_date}')
+                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/albums/?page_size=1500&tz=Asia%2FSeoul&child={child}&date={formatted_date}')
                 if response.status_code == 200:
                     albums_info = json.loads(response.text)
                     download_album_images(albums_info, child_name, '앨범', download_folder)
@@ -88,7 +94,7 @@ def get_album_list(session, childrens, start_date=None, end_date=None, download_
             for i in range(int(recent_day)):
                 target_date = today - timedelta(days=i)
                 formatted_date = target_date.strftime('%Y-%m-%d')
-                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/reports/?page_size=100&tz=Asia%2FSeoul&child={child}&date_start={formatted_date}&date_end={formatted_date}')
+                response = session.get(f'https://www.kidsnote.com/api/v1_2/children/{child}/reports/?page_size=1500&tz=Asia%2FSeoul&child={child}&date_start={formatted_date}&date_end={formatted_date}')
                 if response.status_code == 200:
                     albums_info = json.loads(response.text)
                     download_album_images(albums_info, child_name, '알림장', download_folder)
@@ -109,9 +115,10 @@ def download_album_images(albums_info, child_name, note_type, download_folder):
             date = album['created'][0:10]
 
             folder_name = f"[{date}]{title}"
-            download_dir = os.path.join(download_folder, child_name, folder_name)
+            sanitized_folder_name = sanitize_filename(folder_name)
+            download_dir = os.path.join(download_folder, child_name, sanitized_folder_name)
 
-            os.makedirs(f"{download_dir}", exist_ok=True)
+            os.makedirs(download_dir, exist_ok=True)
 
             # 이미지 URL들 가져오기
             image_urls = [image_json['original'] for image_json in images]
@@ -123,7 +130,7 @@ def download_album_images(albums_info, child_name, note_type, download_folder):
                 file_path = os.path.join(download_dir, filename)
 
                 if not os.path.exists(file_path):
-                    log(f"Downloading {filename} from {image_url}...")
+                    log(f"Downloading {filename} ...")
                     urlretrieve(image_url, file_path)
                     log(f"{filename} download complete.")
                 else:
@@ -138,7 +145,7 @@ def download_album_images(albums_info, child_name, note_type, download_folder):
                 file_path = os.path.join(download_dir, filename)
 
                 if not os.path.exists(file_path):
-                    log(f"Downloading {filename} from {video_url}...")
+                    log(f"Downloading {filename} ...")
                     urlretrieve(video_url, file_path)
                     log(f"{filename} download complete.")
                 else:

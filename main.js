@@ -42,7 +42,7 @@ ipcMain.handle('select-download-folder', async () => {
 });
 
 ipcMain.on('run-python-script', (event, command) => {
-    const [cmd, ...args] = command.split(' ');
+    const [cmd, ...args] = command.split('|');
     const pythonProcess = spawn(cmd, args);
 
     pythonProcess.stdout.on('data', (data) => {

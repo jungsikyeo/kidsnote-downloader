@@ -122,7 +122,7 @@
         overlay.style.display = 'flex';
 
         const pythonScriptPath = './dist/main';
-        const command = `${pythonScriptPath} ${username} ${password} ${startDate} ${endDate} \"${downloadFolder}\"`;
+        const command = `${pythonScriptPath}|${username}|${password}|${startDate}|${endDate}|${downloadFolder}`;
 
         window.electron.ipcRenderer.send('run-python-script', command);
     }
