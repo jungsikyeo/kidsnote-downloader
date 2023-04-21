@@ -14,7 +14,7 @@ function createWindow() {
     });
 
     mainWindow.loadFile('index.html');
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
@@ -43,7 +43,7 @@ ipcMain.handle('select-download-folder', async () => {
 
 ipcMain.on('run-python-script', (event, command) => {
     const [cmd, ...args] = command.split('|');
-    const pythonProcess = spawn(cmd, args);
+    const pythonProcess = spawn(path.join(app.getAppPath(), cmd), args);
 
     pythonProcess.stdout.on('data', (data) => {
         console.log(`Stdout: ${data}`);
