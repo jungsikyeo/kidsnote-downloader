@@ -14,7 +14,7 @@ function createWindow() {
     });
 
     mainWindow.loadFile('index.html');
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
@@ -42,13 +42,23 @@ ipcMain.handle('select-download-folder', async () => {
 });
 
 ipcMain.on('run-python-script', (event, command) => {
-    const [cmd, ...args] = command.split('|');
-    const pythonProcess = spawn(path.join(app.getAppPath(), cmd), args);
+    const [...args] = command.split('|');
+    let cmdPath;
+    const appPath = app.isPackaged ? process.resourcesPath : path.join(app.getAppPath(), 'dist')
+    if (process.platform === "win32") {
+        cmdPath = path.join(appPath, 'main.exe');
+    } else if (process.platform === "darwin") {
+        cmdPath = path.join(appPath, 'main');
+    } else {
+        cmdPath = path.join(appPath, 'main');
+    }
+
+    const pythonProcess = spawn(cmdPath, args, { encoding: 'utf-8' });
 
     pythonProcess.stdout.on('data', (data) => {
         console.log(`Stdout: ${data}`);
         try {
-            const message = JSON.parse(data);
+            const message = JSON.parse(data.toString('utf-8'));
             if (message.type === 'log') {
                 event.sender.send('log-message', message.message);
             } else if (message.type === 'download-complete') {

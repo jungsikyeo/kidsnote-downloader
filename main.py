@@ -13,12 +13,14 @@ recent_day = 7
 
 def log(message):
     if message:
-        sys.stdout.write(json.dumps({'type': 'log', 'message': message}, ensure_ascii=False) + '\n')
+        message_json = json.dumps({'type': 'log', 'message': message}, ensure_ascii=False)
+        sys.stdout.buffer.write((message_json + '\n').encode('utf-8'))
         sys.stdout.flush()
 
 def download_complete(message):
     if message:
-        sys.stdout.write(json.dumps({'type': 'download-complete', 'message': message}, ensure_ascii=False) + '\n')
+        message_json = json.dumps({'type': 'download-complete', 'message': message}, ensure_ascii=False)
+        sys.stdout.buffer.write((message_json + '\n').encode('utf-8'))
         sys.stdout.flush()
 
 def sanitize_filename(filename):
